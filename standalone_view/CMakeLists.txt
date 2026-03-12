@@ -1,56 +1,41 @@
-cmake_minimum_required(VERSION 3.13)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-project("sceneviewer")
-
-set(DEFAULT_BUILD_TYPE "Release")
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
-    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "Choose the type of build." FORCE)
-endif()
-
-option(BUILD_QML "Build qml scene viewer" ${BUILD_QML})
-
 find_package(PkgConfig REQUIRED)
 
-add_compile_options(
-    $<$<CONFIG:Debug>:-ggdb>
-    $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
-    $<$<CONFIG:Debug>:-fsanitize=address>
-)
+# Try to find GLFW using different methods
+find_package(glfw3 CONFIG QUIET)
+if(NOT glfw3_FOUND)
+    pkg_check_modules(GLFW QUIET glfw3)
+endif()
 
-add_link_options(
-    $<$<CONFIG:Debug>:-fsanitize=address>
-)
+# If GLFW not found, use FetchContent to download and build it
+if(NOT glfw3_FOUND AND NOT GLFW_FOUND)
+    message(FATAL "GLFW required, but not found!")
+endif()
 
-include_directories(../third_party)
-add_subdirectory(.. scenebackend)
-
-pkg_check_modules(GLFW REQUIRED glfw3)
-add_executable(${PROJECT_NAME}
+add_executable(sceneviewer
     glfwviewer.cpp
 )
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(sceneviewer
     PUBLIC 
         ${GLFW_LIBRARIES}
         wescene-renderer
 )
 
 if(BUILD_QML)
-    find_package(Qt${QT_MAJOR_VERSION} COMPONENTS Qml REQUIRED)
+    find_package(Qt6 COMPONENTS Qml Quick REQUIRED)
 
     set(CMAKE_AUTOMOC ON) 
     set(CMAKE_AUTORCC ON) 
     set(CMAKE_AUTOUIC ON)
 
-    add_executable(${PROJECT_NAME}-qml
+    add_executable(sceneviewer-qml
         qmlviewer.cpp
         main.qml
         pkg.qrc
     )
-    target_link_libraries(${PROJECT_NAME}-qml
+    target_link_libraries(sceneviewer-qml
         PUBLIC 
+        Qt6::Qml
+        Qt6::Quick
         wescene-renderer-qml
     )
     set(CMAKE_AUTOMOC OFF) 

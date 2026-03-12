@@ -40,3 +40,5 @@ if(BUILD_QML)
     set(CMAKE_AUTORCC OFF) 
     set(CMAKE_AUTOUIC OFF) 
 endif()
+
+add_subdirectory(standalone_view)
