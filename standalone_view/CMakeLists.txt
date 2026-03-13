@@ -1,22 +1,15 @@
 find_package(PkgConfig REQUIRED)
 
 # Try to find GLFW using different methods
-find_package(glfw3 CONFIG QUIET)
-if(NOT glfw3_FOUND)
-    pkg_check_modules(GLFW QUIET glfw3)
-endif()
+pkg_check_modules(GLFW REQUIRED IMPORTED_TARGET glfw3)
 
-# If GLFW not found, use FetchContent to download and build it
-if(NOT glfw3_FOUND AND NOT GLFW_FOUND)
-    message(FATAL "GLFW required, but not found!")
-endif()
 
 add_executable(sceneviewer
     glfwviewer.cpp
 )
 target_link_libraries(sceneviewer
     PUBLIC 
-        ${GLFW_LIBRARIES}
+        PkgConfig::GLFW
         wescene-renderer
 )
 
